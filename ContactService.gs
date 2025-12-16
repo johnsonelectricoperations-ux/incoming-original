@@ -128,31 +128,36 @@ function getContactInfo(token, companyName) {
     for (let i = 1; i < data.length; i++) {
       const row = data[i];
 
+      // 빈 행 건너뛰기
+      if (!row[0] || row[0] === '') {
+        continue;
+      }
+
       // 일반 사용자는 자신의 업체만, 관리자/JEO는 전체 조회
       if (session.role === '관리자' || session.role === 'JEO') {
         // 전체 조회
         if (!companyName || row[0] === companyName) {
           result.push({
-            companyName: row[0],
-            contactName: row[1],
-            phone: row[2],
-            email: row[3],
-            createdAt: row[4],
-            updatedAt: row[5],
-            createdBy: row[6]
+            companyName: row[0] || '',
+            contactName: row[1] || '',
+            phone: row[2] || '',
+            email: row[3] || '',
+            createdAt: row[4] || '',
+            updatedAt: row[5] || '',
+            createdBy: row[6] || ''
           });
         }
       } else {
         // 자신의 업체만 조회
         if (row[0] === session.companyName) {
           result.push({
-            companyName: row[0],
-            contactName: row[1],
-            phone: row[2],
-            email: row[3],
-            createdAt: row[4],
-            updatedAt: row[5],
-            createdBy: row[6]
+            companyName: row[0] || '',
+            contactName: row[1] || '',
+            phone: row[2] || '',
+            email: row[3] || '',
+            createdAt: row[4] || '',
+            updatedAt: row[5] || '',
+            createdBy: row[6] || ''
           });
         }
       }
@@ -219,14 +224,20 @@ function getAllContactInfo(token) {
 
     for (let i = 1; i < data.length; i++) {
       const row = data[i];
+
+      // 빈 행 건너뛰기
+      if (!row[0] || row[0] === '') {
+        continue;
+      }
+
       result.push({
-        companyName: row[0],
-        contactName: row[1],
-        phone: row[2],
-        email: row[3],
-        createdAt: row[4],
-        updatedAt: row[5],
-        createdBy: row[6]
+        companyName: row[0] || '',
+        contactName: row[1] || '',
+        phone: row[2] || '',
+        email: row[3] || '',
+        createdAt: row[4] || '',
+        updatedAt: row[5] || '',
+        createdBy: row[6] || ''
       });
     }
 
