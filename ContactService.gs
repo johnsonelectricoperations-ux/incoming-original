@@ -9,15 +9,24 @@
 function saveContactInfo(token, contactData) {
   const startTime = Date.now();
 
+  Logger.log('=== saveContactInfo 시작 ===');
+  Logger.log('Token 존재: ' + (token ? 'yes' : 'no'));
+  Logger.log('ContactData: ' + JSON.stringify(contactData));
+
   try {
     // 인증 확인
     const session = getSessionByToken(token);
+    Logger.log('Session 조회 결과: ' + (session ? JSON.stringify(session) : 'null'));
+
     if (!session || !session.userId) {
+      Logger.log('인증 실패');
       return {
         success: false,
         message: '인증되지 않은 사용자입니다.'
       };
     }
+
+    Logger.log('인증 성공: ' + session.userId + ' (' + session.role + ')');
 
     // 일반 사용자는 자신의 업체 정보만 수정 가능
     if (session.role !== '관리자' && session.role !== 'JEO') {
@@ -77,20 +86,25 @@ function saveContactInfo(token, contactData) {
     const totalTime = Date.now() - startTime;
     Logger.log(`연락처 정보 저장 완료 (${totalTime}ms): ${contactData.companyName}`);
 
-    return {
+    const result = {
       success: true,
       message: '연락처 정보가 저장되었습니다.',
       executionTime: totalTime
     };
+    Logger.log('반환 결과: ' + JSON.stringify(result));
+    return result;
 
   } catch (error) {
     const totalTime = Date.now() - startTime;
     Logger.log(`연락처 정보 저장 오류 (${totalTime}ms): ${error.toString()}`);
-    return {
+    Logger.log('Error stack: ' + error.stack);
+    const result = {
       success: false,
       message: '연락처 정보 저장 중 오류가 발생했습니다: ' + error.message,
       executionTime: totalTime
     };
+    Logger.log('반환 결과 (오류): ' + JSON.stringify(result));
+    return result;
   }
 }
 
@@ -100,28 +114,44 @@ function saveContactInfo(token, contactData) {
 function getContactInfo(token, companyName) {
   const startTime = Date.now();
 
+  Logger.log('=== getContactInfo 시작 ===');
+  Logger.log('Token 존재: ' + (token ? 'yes' : 'no'));
+  Logger.log('CompanyName: ' + companyName);
+
   try {
     // 인증 확인
     const session = getSessionByToken(token);
+    Logger.log('Session 조회 결과: ' + (session ? JSON.stringify(session) : 'null'));
+
     if (!session || !session.userId) {
+      Logger.log('인증 실패');
       return {
         success: false,
         message: '인증되지 않은 사용자입니다.'
       };
     }
 
+    Logger.log('인증 성공: ' + session.userId + ' (' + session.role + ')');
+
     const ss = SpreadsheetApp.getActiveSpreadsheet();
+    Logger.log('Spreadsheet ID: ' + ss.getId());
+
     const sheet = ss.getSheetByName('ContactInfo');
+    Logger.log('ContactInfo 시트 존재: ' + (sheet ? 'yes' : 'no'));
 
     if (!sheet) {
-      return {
+      Logger.log('ContactInfo 시트가 없음 - 빈 배열 반환');
+      const response = {
         success: true,
         data: [],
         executionTime: Date.now() - startTime
       };
+      Logger.log('반환 결과 (시트 없음): ' + JSON.stringify(response));
+      return response;
     }
 
     const data = sheet.getDataRange().getValues();
+    Logger.log('시트 데이터 행 수: ' + data.length);
     const headers = data[0];
     const result = [];
 
@@ -166,20 +196,25 @@ function getContactInfo(token, companyName) {
     const totalTime = Date.now() - startTime;
     Logger.log(`연락처 정보 조회 완료 (${totalTime}ms): ${result.length}건`);
 
-    return {
+    const response = {
       success: true,
       data: result,
       executionTime: totalTime
     };
+    Logger.log('반환 결과: ' + JSON.stringify(response));
+    return response;
 
   } catch (error) {
     const totalTime = Date.now() - startTime;
     Logger.log(`연락처 정보 조회 오류 (${totalTime}ms): ${error.toString()}`);
-    return {
+    Logger.log('Error stack: ' + error.stack);
+    const response = {
       success: false,
       message: '연락처 정보 조회 중 오류가 발생했습니다: ' + error.message,
       executionTime: totalTime
     };
+    Logger.log('반환 결과 (오류): ' + JSON.stringify(response));
+    return response;
   }
 }
 
@@ -189,36 +224,54 @@ function getContactInfo(token, companyName) {
 function getAllContactInfo(token) {
   const startTime = Date.now();
 
+  Logger.log('=== getAllContactInfo 시작 ===');
+  Logger.log('Token 존재: ' + (token ? 'yes' : 'no'));
+
   try {
     // 인증 확인
     const session = getSessionByToken(token);
+    Logger.log('Session 조회 결과: ' + (session ? JSON.stringify(session) : 'null'));
+
     if (!session || !session.userId) {
+      Logger.log('인증 실패');
       return {
         success: false,
         message: '인증되지 않은 사용자입니다.'
       };
     }
 
+    Logger.log('인증 성공: ' + session.userId + ' (' + session.role + ')');
+
     // 권한 확인
     if (session.role !== '관리자' && session.role !== 'JEO') {
+      Logger.log('권한 부족: ' + session.role);
       return {
         success: false,
         message: '권한이 없습니다.'
       };
     }
 
+    Logger.log('권한 확인 완료: 관리자/JEO');
+
     const ss = SpreadsheetApp.getActiveSpreadsheet();
+    Logger.log('Spreadsheet ID: ' + ss.getId());
+
     const sheet = ss.getSheetByName('ContactInfo');
+    Logger.log('ContactInfo 시트 존재: ' + (sheet ? 'yes' : 'no'));
 
     if (!sheet) {
-      return {
+      Logger.log('ContactInfo 시트가 없음 - 빈 배열 반환');
+      const response = {
         success: true,
         data: [],
         executionTime: Date.now() - startTime
       };
+      Logger.log('반환 결과 (시트 없음): ' + JSON.stringify(response));
+      return response;
     }
 
     const data = sheet.getDataRange().getValues();
+    Logger.log('시트 데이터 행 수: ' + data.length);
     const headers = data[0];
     const result = [];
 
@@ -244,20 +297,25 @@ function getAllContactInfo(token) {
     const totalTime = Date.now() - startTime;
     Logger.log(`전체 연락처 정보 조회 완료 (${totalTime}ms): ${result.length}건`);
 
-    return {
+    const response = {
       success: true,
       data: result,
       executionTime: totalTime
     };
+    Logger.log('반환 결과: ' + JSON.stringify(response));
+    return response;
 
   } catch (error) {
     const totalTime = Date.now() - startTime;
     Logger.log(`전체 연락처 정보 조회 오류 (${totalTime}ms): ${error.toString()}`);
-    return {
+    Logger.log('Error stack: ' + error.stack);
+    const response = {
       success: false,
       message: '연락처 정보 조회 중 오류가 발생했습니다: ' + error.message,
       executionTime: totalTime
     };
+    Logger.log('반환 결과 (오류): ' + JSON.stringify(response));
+    return response;
   }
 }
 
