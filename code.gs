@@ -64,6 +64,9 @@ function doGet(e) {
     case 'certificate':
       template = HtmlService.createTemplateFromFile('Certificate');
       break;
+    case 'contact':
+      template = HtmlService.createTemplateFromFile('ContactInfo');
+      break;
     case 'inspection':
       template = HtmlService.createTemplateFromFile('InspectionSpec');
       break;
