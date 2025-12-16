@@ -582,10 +582,17 @@
 
     // 연락처 정보 로드 (일반 사용자용)
     function loadContactInfo() {
+      console.log('=== loadContactInfo 호출 ===');
+      console.log('SessionToken:', sessionToken);
+
       google.script.run
         .withSuccessHandler(function(response) {
+          console.log('서버 응답 수신:', response);
+          console.log('응답 타입:', typeof response);
+
           if (!response) {
             console.error('응답이 null입니다.');
+            console.error('이것은 서버 함수가 값을 반환하지 않았거나 오류가 발생했음을 의미합니다.');
             return;
           }
           if (response.success && response.data && response.data.length > 0) {
@@ -634,10 +641,17 @@
 
     // 모든 연락처 정보 로드 (관리자/JEO용)
     function loadAllContactInfo() {
+      console.log('=== loadAllContactInfo 호출 ===');
+      console.log('SessionToken:', sessionToken);
+
       google.script.run
         .withSuccessHandler(function(response) {
+          console.log('서버 응답 수신:', response);
+          console.log('응답 타입:', typeof response);
+
           if (!response) {
             console.error('응답이 null입니다.');
+            console.error('이것은 서버 함수가 값을 반환하지 않았거나 오류가 발생했음을 의미합니다.');
             showError('서버로부터 응답을 받지 못했습니다.');
             return;
           }
@@ -749,8 +763,21 @@
             email: email
           };
 
+          console.log('=== saveContactInfo 호출 ===');
+          console.log('SessionToken:', sessionToken);
+          console.log('ContactData:', contactData);
+
           google.script.run
             .withSuccessHandler(function(response) {
+              console.log('저장 응답 수신:', response);
+              console.log('응답 타입:', typeof response);
+
+              if (!response) {
+                console.error('응답이 null입니다.');
+                alert('서버로부터 응답을 받지 못했습니다.');
+                return;
+              }
+
               if (response.success) {
                 alert('연락처 정보가 저장되었습니다.');
                 // 저장 후 정보 다시 로드
