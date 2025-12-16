@@ -636,7 +636,8 @@
         html += '<td>' + (item.time || '') + '</td>';
         html += '<td>' + (item.tmNo || '') + '</td>';
         html += '<td>' + (item.productName || '') + '</td>';
-        html += '<td>' + (item.quantity || 0) + '</td>';
+        // 수량에 천단위 콤마 추가
+        html += '<td>' + Number(item.quantity || 0).toLocaleString('ko-KR') + '</td>';
         html += '<td>';
         if (item.pdfUrl) {
           html += '<a href="' + item.pdfUrl + '" target="_blank" class="btn-link">📄 보기</a>';
