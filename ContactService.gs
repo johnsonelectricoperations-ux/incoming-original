@@ -11,8 +11,8 @@ function saveContactInfo(token, contactData) {
 
   try {
     // 인증 확인
-    const user = TokenService.validateToken(token);
-    if (!user) {
+    const session = getSessionByToken(token);
+    if (!session || !session.userId) {
       return {
         success: false,
         message: '인증되지 않은 사용자입니다.'
@@ -20,8 +20,8 @@ function saveContactInfo(token, contactData) {
     }
 
     // 일반 사용자는 자신의 업체 정보만 수정 가능
-    if (user.role !== '관리자' && user.role !== 'JEO') {
-      if (contactData.companyName !== user.companyName) {
+    if (session.role !== '관리자' && session.role !== 'JEO') {
+      if (contactData.companyName !== session.companyName) {
         return {
           success: false,
           message: '다른 업체의 정보는 수정할 수 없습니다.'
@@ -29,7 +29,7 @@ function saveContactInfo(token, contactData) {
       }
     }
 
-    const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
     let sheet = ss.getSheetByName('ContactInfo');
 
     // ContactInfo 시트가 없으면 생성
@@ -70,7 +70,7 @@ function saveContactInfo(token, contactData) {
         contactData.email || '',
         nowStr, // 등록일
         nowStr, // 수정일
-        user.name
+        session.name
       ]);
     }
 
@@ -102,15 +102,15 @@ function getContactInfo(token, companyName) {
 
   try {
     // 인증 확인
-    const user = TokenService.validateToken(token);
-    if (!user) {
+    const session = getSessionByToken(token);
+    if (!session || !session.userId) {
       return {
         success: false,
         message: '인증되지 않은 사용자입니다.'
       };
     }
 
-    const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
     const sheet = ss.getSheetByName('ContactInfo');
 
     if (!sheet) {
@@ -129,7 +129,7 @@ function getContactInfo(token, companyName) {
       const row = data[i];
 
       // 일반 사용자는 자신의 업체만, 관리자/JEO는 전체 조회
-      if (user.role === '관리자' || user.role === 'JEO') {
+      if (session.role === '관리자' || session.role === 'JEO') {
         // 전체 조회
         if (!companyName || row[0] === companyName) {
           result.push({
@@ -144,7 +144,7 @@ function getContactInfo(token, companyName) {
         }
       } else {
         // 자신의 업체만 조회
-        if (row[0] === user.companyName) {
+        if (row[0] === session.companyName) {
           result.push({
             companyName: row[0],
             contactName: row[1],
@@ -186,8 +186,8 @@ function getAllContactInfo(token) {
 
   try {
     // 인증 확인
-    const user = TokenService.validateToken(token);
-    if (!user) {
+    const session = getSessionByToken(token);
+    if (!session || !session.userId) {
       return {
         success: false,
         message: '인증되지 않은 사용자입니다.'
@@ -195,14 +195,14 @@ function getAllContactInfo(token) {
     }
 
     // 권한 확인
-    if (user.role !== '관리자' && user.role !== 'JEO') {
+    if (session.role !== '관리자' && session.role !== 'JEO') {
       return {
         success: false,
         message: '권한이 없습니다.'
       };
     }
 
-    const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
     const sheet = ss.getSheetByName('ContactInfo');
 
     if (!sheet) {
