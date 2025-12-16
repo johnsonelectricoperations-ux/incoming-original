@@ -265,6 +265,34 @@
       color: #333;
     }
 
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 12px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-weight: 600;
+    }
+
+    .btn-edit {
+      background: #ffc107;
+      color: white;
+    }
+
+    .btn-edit:hover {
+      background: #ffb300;
+    }
+
+    .btn-delete {
+      background: #f44336;
+      color: white;
+    }
+
+    .btn-delete:hover {
+      background: #d32f2f;
+    }
+
     @media (max-width: 768px) {
       .form-row {
         grid-template-columns: 1fr;
@@ -324,6 +352,26 @@
           <button type="submit" class="btn-primary">💾 저장</button>
         </div>
       </form>
+
+      <!-- 일반 사용자용 등록 정보 표시 -->
+      <div id="userContactTable" style="margin-top: 30px; display: none;">
+        <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 15px; color: #333;">등록된 연락처 정보</h3>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>품질담당자</th>
+                <th>연락처</th>
+                <th>이메일</th>
+                <th>등록일</th>
+                <th>작업</th>
+              </tr>
+            </thead>
+            <tbody id="userContactTableBody">
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
     <!-- 관리자/JEO용 테이블 -->
@@ -542,15 +590,46 @@
           }
           if (response.success && response.data && response.data.length > 0) {
             const contact = response.data[0];
+            // 폼에 데이터 로드
             document.getElementById('contactName').value = contact.contactName || '';
             document.getElementById('phone').value = contact.phone || '';
             document.getElementById('email').value = contact.email || '';
+            // 테이블 표시
+            displayUserContactTable(contact);
+          } else {
+            // 데이터가 없으면 테이블 숨김
+            document.getElementById('userContactTable').style.display = 'none';
           }
         })
         .withFailureHandler(function(error) {
           console.error('연락처 정보 로드 실패:', error);
         })
         .getContactInfo(sessionToken, null);
+    }
+
+    // 일반 사용자용 테이블 표시
+    function displayUserContactTable(contact) {
+      const tableBody = document.getElementById('userContactTableBody');
+      const tableDiv = document.getElementById('userContactTable');
+
+      if (!contact) {
+        tableDiv.style.display = 'none';
+        return;
+      }
+
+      let html = '<tr>';
+      html += '<td>' + (contact.contactName || '-') + '</td>';
+      html += '<td>' + (contact.phone || '-') + '</td>';
+      html += '<td>' + (contact.email || '-') + '</td>';
+      html += '<td>' + (contact.createdAt ? formatDate(contact.createdAt) : '-') + '</td>';
+      html += '<td>';
+      html += '<button class="btn-sm btn-edit" onclick="editContactInfo()" style="margin-right: 5px;">✏️ 수정</button>';
+      html += '<button class="btn-sm btn-delete" onclick="deleteContactInfo()">🗑️ 삭제</button>';
+      html += '</td>';
+      html += '</tr>';
+
+      tableBody.innerHTML = html;
+      tableDiv.style.display = 'block';
     }
 
     // 모든 연락처 정보 로드 (관리자/JEO용)
@@ -688,6 +767,44 @@
         });
       }
     });
+
+    // 연락처 정보 수정 (폼으로 스크롤)
+    function editContactInfo() {
+      // 이미 폼에 데이터가 로드되어 있으므로 폼으로 스크롤만
+      document.getElementById('contactForm').scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      });
+      // 첫 번째 입력 필드에 포커스
+      document.getElementById('contactName').focus();
+    }
+
+    // 연락처 정보 삭제
+    function deleteContactInfo() {
+      if (!confirm('연락처 정보를 삭제하시겠습니까?')) {
+        return;
+      }
+
+      google.script.run
+        .withSuccessHandler(function(response) {
+          if (response.success) {
+            alert('연락처 정보가 삭제되었습니다.');
+            // 폼 초기화
+            document.getElementById('contactName').value = '';
+            document.getElementById('phone').value = '';
+            document.getElementById('email').value = '';
+            // 테이블 숨김
+            document.getElementById('userContactTable').style.display = 'none';
+          } else {
+            alert(response.message || '삭제 중 오류가 발생했습니다.');
+          }
+        })
+        .withFailureHandler(function(error) {
+          console.error('삭제 실패:', error);
+          alert('삭제 중 오류가 발생했습니다.');
+        })
+        .deleteContactInfo(sessionToken, currentUser.companyName);
+    }
 
     // 로그아웃
     function logout() {

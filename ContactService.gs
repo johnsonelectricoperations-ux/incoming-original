@@ -260,3 +260,80 @@ function getAllContactInfo(token) {
     };
   }
 }
+
+/**
+ * 연락처 정보 삭제
+ */
+function deleteContactInfo(token, companyName) {
+  const startTime = Date.now();
+
+  try {
+    // 인증 확인
+    const session = getSessionByToken(token);
+    if (!session || !session.userId) {
+      return {
+        success: false,
+        message: '인증되지 않은 사용자입니다.'
+      };
+    }
+
+    // 일반 사용자는 자신의 업체 정보만 삭제 가능
+    if (session.role !== '관리자' && session.role !== 'JEO') {
+      if (companyName !== session.companyName) {
+        return {
+          success: false,
+          message: '다른 업체의 정보는 삭제할 수 없습니다.'
+        };
+      }
+    }
+
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheetByName('ContactInfo');
+
+    if (!sheet) {
+      return {
+        success: false,
+        message: '연락처 정보 시트를 찾을 수 없습니다.'
+      };
+    }
+
+    const data = sheet.getDataRange().getValues();
+
+    // 삭제할 행 찾기
+    let deleteRowIndex = -1;
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0] === companyName) {
+        deleteRowIndex = i + 1; // 시트는 1-based index
+        break;
+      }
+    }
+
+    if (deleteRowIndex === -1) {
+      return {
+        success: false,
+        message: '삭제할 연락처 정보를 찾을 수 없습니다.'
+      };
+    }
+
+    // 행 삭제
+    sheet.deleteRow(deleteRowIndex);
+
+    const totalTime = Date.now() - startTime;
+    Logger.log(`연락처 정보 삭제 완료 (${totalTime}ms): ${companyName}`);
+
+    return {
+      success: true,
+      message: '연락처 정보가 삭제되었습니다.',
+      executionTime: totalTime
+    };
+
+  } catch (error) {
+    const totalTime = Date.now() - startTime;
+    Logger.log(`연락처 정보 삭제 오류 (${totalTime}ms): ${error.toString()}`);
+    return {
+      success: false,
+      message: '연락처 정보 삭제 중 오류가 발생했습니다: ' + error.message,
+      executionTime: totalTime
+    };
+  }
+}
